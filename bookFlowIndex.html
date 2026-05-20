@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>校园图书漂流共享平台</title>
+    <style>
+        *{margin:0;padding:0;box-sizing: border-box;}
+        body{background:#f5f7fa;font-family: "微软雅黑";padding:20px;}
+        .header{width:1200px;margin:0 auto;padding:15px 0;border-bottom:2px solid #2288ff;}
+        .header h1{color:#2288ff;text-align:center;}
+        .nav{width:1200px;margin:15px auto;display:flex;gap:30px;justify-content:center;}
+        .nav button{padding:8px 20px;border:none;background:#2288ff;color:#fff;border-radius:4px;cursor:pointer;}
+        .container{width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:20px;}
+        .book-card{width:260px;padding:15px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;}
+        .book-name{font-size:18px;font-weight:bold;margin-bottom:8px;}
+        .book-info{font-size:14px;color:#666;line-height:1.6;}
+        .status-free{color:#10b981;}
+        .status-borrow{color:#ef4444;}
+        .btn-borrow{margin-top:10px;width:100%;padding:7px;border:none;background:#10b981;color:#fff;border-radius:4px;cursor:pointer;}
+        .btn-back{background:#f59e0b;}
+        .msg-box{width:1200px;margin:10px auto;padding:10px;border-radius:4px;display:none;}
+        .success{background:#d1fae5;color:#065f46;}
+        .error{background:#fee2e2;color:#b91c1c;}
+        .search-box{width:1200px;margin:15px auto;text-align:center;}
+        .search-box input{padding:6px;width:280px;border:1px solid #ccc;border-radius:4px;}
+        .search-box button{padding:6px 15px;background:#2288ff;color:#fff;border:none;border-radius:4px;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>校园图书漂流共享平台</h1>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchKey" placeholder="输入书名/作者搜索">
+        <select id="typeSel">
+            <option value="全部">全部分类</option>
+            <option value="文学">文学小说</option>
+            <option value="教辅">学习教辅</option>
+            <option value="科普">科普读物</option>
+        </select>
+        <button onclick="searchBook()">筛选查询</button>
+    </div>
+
+    <div class="nav">
+        <button onclick="getFreeBook()">可漂流图书</button>
+        <button onclick="getMyBorrow()">我的借阅</button>
+        <button onclick="publishBookPage()">发布闲置图书</button>
+        <button onclick="userCredit()">查看我的信用积分</button>
+    </div>
+
+    <div class="msg-box" id="msgBox"></div>
+
+    <div class="container" id="bookContainer">
+        <!-- 图书卡片动态渲染 -->
+    </div>
+
+    <script>
+        // 全局统一消息提示（后端指出优化点：统一异常拦截）
+        function showMsg(text,type){
+            let box = document.getElementById("msgBox");
+            box.innerText = text;
+            box.className = "msg-box "+type;
+            box.style.display = "block";
+            setTimeout(()=>{
+                box.style.display = "none";
+            },2500)
+        }
+
+        // 模拟全部图书数据
+        let bookData = [
+            {bid:1,bname:"朝花夕拾",author:"鲁迅",type:"文学",desc:"经典散文集",status:"可漂流",day:15},
+            {bid:2,bname:"高等数学",author:"同济教材组",type:"教辅",desc:"大学高数课本",status:"已借出",day:20},
+            {bid:3,bname:"宇宙简史",author:"霍金",type:"科普",desc:"宇宙科普书籍",status:"可漂流",day:10}
+        ];
+
+        // 渲染图书列表
+        function renderBook(list){
+            let html = "";
+            list.forEach(item=>{
+                let statClass = item.status==="可漂流"?"status-free":"status-borrow";
+                let btnText = item.status==="可漂流"?"立即申请漂流":"已被借阅";
+                let btnClass = item.status==="可漂流"?"btn-borrow":"btn-borrow btn-back";
+                html += `
+                <div class="book-card">
+                    <div class="book-name">${item.bname}</div>
+                    <div class="book-info">
+                        <p>作者：${item.author}</p>
+                        <p>分类：${item.type}</p>
+                        <p>简介：${item.desc}</p>
+                        <p>漂流期限：${item.day}天</p>
+                        <p>状态：<span class="${statClass}">${item.status}</span></p>
+                    </div>
+                    <button class="${btnClass}" onclick="applyFlow(${item.bid})">${btnText}</button>
+                </div>
+                `
+            })
+            document.getElementById("bookContainer").innerHTML = html;
+        }
+
+        // 初始化加载全部图书
+        window.onload = function(){
+            renderBook(bookData);
+        }
+
+        // 筛选可漂流图书
+        function getFreeBook(){
+            let arr = bookData.filter(item=>item.status==="可漂流");
+            renderBook(arr);
+        }
+
+        // 搜索图书
+        function searchBook(){
+            let key = document.getElementById("searchKey").value.trim();
+            let t = document.getElementById("typeSel").value;
+            let res = bookData.filter(item=>{
+                let flag1 = item.bname.includes(key) || item.author.includes(key);
+                let flag2 = t==="全部" ? true : item.type===t;
+                return flag1&&flag2;
+            })
+            renderBook(res);
+        }
+
+        // 申请漂流借阅
+        function applyFlow(bid){
+            // 前端模拟调用后端接口
+            if(bid === 1){
+                // 模拟重复借阅拦截
+                showMsg("借阅失败：30天内不可重复借阅本书","error");
+            }else{
+                showMsg("图书漂流申请提交成功，请耐心等待发布人同意","success");
+            }
+        }
+
+        function getMyBorrow(){
+            showMsg("加载我的借阅记录中...","success");
+        }
+        function publishBookPage(){
+            showMsg("跳转图书发布页面","success");
+        }
+        function userCredit(){
+            showMsg("当前个人信用积分：95分，状态正常","success");
+        }
+    </script>
+</body>
+</html>
