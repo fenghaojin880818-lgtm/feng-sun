@@ -91,3 +91,4 @@ public class User {
         this.accountStatus = accountStatus;
     }
 }
+// 完善用户信用分校验逻辑
